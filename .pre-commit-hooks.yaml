@@ -1,6 +1,7 @@
 -   id: checkstyle
     name: Checkstyle Java Code
     description: This hook checkstyle the code style.
-    entry: runCheckstyle.sh
+    #entry: runCheckstyle.sh
+    entry: runCheckstylePerl
     language: script
     types: [text]
