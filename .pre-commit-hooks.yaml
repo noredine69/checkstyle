@@ -2,5 +2,5 @@
     name: Checkstyle Java Code
     description: This hook checkstyle the code style.
     entry: runCheckstyle.sh
-    language: system
+    language: script
     types: [text]
