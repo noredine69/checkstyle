@@ -15,22 +15,25 @@
 # Now, when you commit, you will be disallowed from doing so
 # until you pass your checkstyle checks.
 
-$command = "git-diff-index --cached HEAD 2>&1 | sed 's/^:.*     //' | uniq";
+$command = "git diff-index --cached --name-only -m HEAD 2>&1 | uniq";
 open (FILES,$command . "|") || die "Cannot run '$command': $!\n";
 
 $CONFIG_CHECK_FILE = "checkstyle.checkfile";
 $CONFIG_JAR = "checkstyle.jar";
 $CONFIG_JAVA = "java.command";
+$CONFIG_GITUTILS = "checkstyle.gitutils";
 
 $check_file = `git config --get $CONFIG_CHECK_FILE`;
 $checkstyle_jar = `git config --get $CONFIG_JAR`;
 $java_command = `git config --get $CONFIG_JAVA`;
+$git_utils = `git config --get $CONFIG_GITUTILS`;
 
-if (!$check_file || !$checkstyle_jar)
+if (!$check_file || !$checkstyle_jar || !$git_utils)
 {
    die "You must configure checkstyle in your git config:\n"
    . "\t$CONFIG_CHECK_FILE - path to your checkstyle.xml file\n"
    . "\t$CONFIG_JAR - path to your checkstyle jar file\n"
+   . "\t$CONFIG_GITUTILS - path to your gitUtils.sh script file\n"
    . "\t$CONFIG_JAVA - path to your java executable (optional)\n"
    ;
 }
@@ -55,9 +58,11 @@ foreach (<FILES>)
 }
 if ($#java_files >= 0)
 {
-   if (&run_and_log_system ($command))
+   $result = &run_and_log_system ($command);
+   if ($result ne "")
    {
-       print STDERR "Commit aborted.\n";
+       print STDOUT $result;
+       print STDOUT "Commit aborted.\n";
        exit -1;
    }
 }
@@ -67,6 +72,22 @@ exit 0;
 sub run_and_log_system
 {
    ($cmd) = @_;
-
-   system $cmd;
+   my $result = `$cmd`;
+   my @checkStyleResult = split /\n/m, $result;
+   my @modifiedLines = split /\n/m, `$git_utils`;
+   #   /home/ubuntu/Dev/supervision-apps/tmp/checkstyle/gitUtils.sh`;
+   my $finalResult ="";
+   foreach my $check (@checkStyleResult)
+   {
+	   foreach my $line (@modifiedLines)
+	   {
+		my $searchLine = $line.":";
+		my $count = () = $check =~ /$searchLine/g;
+		if($count > 0) 
+		{
+			$finalResult .= $check."\n";
+		}
+	   }
+   }
+   return $finalResult;
 }
