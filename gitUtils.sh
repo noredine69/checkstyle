@@ -20,4 +20,4 @@ diff-lines() {
     done
 }
 
-git diff --cached --unified=0 | diff-lines | grep ":+" | sed 's/\(:+\)\(.*\)//'
+git diff --cached --unified=0 --no-color | diff-lines |grep ":+" | sed 's/\(:+\)\(.*\)//'
